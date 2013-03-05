@@ -1,6 +1,6 @@
 {
     "name": "preprocessor",
-    "version": "0.9.2",
+    "version": "0.9.4",
     "author": "Daniel Wirtz <dcode@dcode.io>",
     "description": "A JavaScript source file preprocessor, e.g. to build different versions of a library.",
     "contributors": [
@@ -24,7 +24,6 @@
     "engines": {
         "node": ">=0.6"
     },
-    "preferGlobal": true,
     "scripts": {
         "prepublish": "npm test",
         "test": "nodeunit tests/suite.js",

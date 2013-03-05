@@ -7,10 +7,12 @@ Directives
 * Includes (not available when run in the browser):
 
  ```javascript
+ ...
  // #include "path/to/file.js"`
+ ...
  ```
- 
-* Conditions:
+
+* Static conditions:
 
  ```javascript
  // #ifdef FULL
@@ -20,8 +22,8 @@ Directives
  console.log("Not including extension");
  // #endif
  ```
-
-* Inverse conditions:
+ 
+* Inverse static conditions:
 
  ```javascript
  // #ifndef FULL
@@ -31,6 +33,23 @@ Directives
  // #include "path/to/extension.js"
  // #endif
  ```
+ 
+* Evaluable conditions:
+ 
+ ```javascript
+ // #if 1==2
+ console.log("1==2");
+ // #elif 2==2
+ console.log("2==2");
+ // #endif
+ 
+* Writing the result of evaluated expressions:
+
+  ```javascript
+  var version = // #put '"'+VERSION+'";"
+  var str = // #put "\"Hello world!\";";
+  var onePlusOne = // #put (1+1)+";"
+  ```
  
 Features
 --------

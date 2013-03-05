@@ -60,7 +60,7 @@
      * Definition expression
      * @type {RegExp}
      */
-    Preprocessor.EXPR = /([ ]*)\/\/[ ]+#(include|ifn?def|endif|else)/g;
+    Preprocessor.EXPR = /([ ]*)\/\/[ ]+#(include|ifn?def|if|endif|else|elif|put)/g;
 
     /**
      * #include "path/to/file". Requires node.js' "fs" module.
@@ -72,18 +72,25 @@
      * #ifdef/#ifndef SOMEDEFINE
      * @type {RegExp}
      */
-    Preprocessor.IFDEF = /(ifn?def)[ ]+([a-zA-Z0-9_]+)[ ]*\r?\n/g;
+    Preprocessor.IFDEF = /(ifdef|ifndef|if)[ ]*([^\r\n]+)\r?\n/g;
 
     /**
      * #endif/#else
      * @type {RegExp}
      */
-    Preprocessor.ENDIF = /(endif|else)[ ]*\r?\n/g;
+    Preprocessor.ENDIF = /(endif|else|elif)([ ]+[^\r\n]+)?\r?\n/g;
+
+    /**
+     * #put SOMEDEFINE / #put "Some string"
+     * @type {RegExp}
+     */
+    Preprocessor.PUT = /put[ ]+([^\n]+)[ ]*\r?\n/g;
 
     /**
      * Strips slashes from an escaped string.
      * @param {string} str Escaped string
      * @returns {string} Unescaped string
+     * @expose
      */
     Preprocessor.stripSlashes = function(str) {
         // ref: http://phpjs.org/functions/stripslashes/
@@ -98,10 +105,21 @@
     };
 
     /**
+     * Adds slashes to an unescaped string.
+     * @param {string} str Unescaped string
+     * @returns {string} Escaped string
+     * @expose
+     */
+    Preprocessor.addSlashes = function(str) {
+        return (str+'').replace(/([\\"'])/g, "\\$1").replace(/\0/g, "\\0");
+    };
+
+    /**
      * Indents a multi-line string.
      * @param {string} str Multi-line string to indent
      * @param {string} indent Indent to use
      * @return {string} Indented string
+     * @expose
      */
     Preprocessor.indent = function(str, indent) {
         var lines = str.split("\n");
@@ -115,9 +133,30 @@
      * Transforms a string for display in error messages.
      * @param {string} str String to transform
      * @returns {string}
+     * @expose
      */
     Preprocessor.nlToStr = function(str) {
         return '['+str.replace(/\r/g, "").replace(/\n/g, "\\n")+']';
+    };
+    
+    /**
+     * Evaluates an expression.
+     * @param {object.<strin,string>} defines Defines
+     * @param {string} expr Expression to evaluate
+     * @return Expression result
+     * @expose
+     */
+    Preprocessor.evaluate = function(defines, expr) {
+        var addSlashes = Preprocessor.addSlashes;
+        return (function(defines, expr) {
+            var Preprocessor = null;
+            for (var key in defines) {
+                if (defines.hasOwnProperty(key)) {
+                    eval("var "+key+" = \""+addSlashes(""+defines[key])+"\";");
+                }
+            }
+            return eval(expr);
+        }).bind(null)(defines, expr);
     };
 
     /**
@@ -131,9 +170,11 @@
     Preprocessor.prototype.process = function(defines, verbose) {
         defines = defines || {};
         verbose = typeof verbose == 'function' ? verbose : function() {};
+        verbose("Defines: "+JSON.stringify(defines));
+        
         var match, match2, include, p, stack = [];
         while ((match = Preprocessor.EXPR.exec(this.source)) !== null) {
-            verbose("expr: "+match[2]+" @ "+match.index+"-"+Preprocessor.EXPR.lastIndex);
+            verbose(match[2]+" @ "+match.index+"-"+Preprocessor.EXPR.lastIndex);
             var indent = match[1];
             switch (match[2]) {
                 case 'include':
@@ -145,24 +186,47 @@
                         throw(new Error("Illegal #"+match[2]+": "+this.source.substring(match.index, match.index+this.errorSourceAhead)+"..."));
                     }
                     include = Preprocessor.stripSlashes(match2[1]);
-                    verbose("  include: "+include);
+                    verbose("  incl: "+include);
                     try {
                         include = require("fs").readFileSync(this.baseDir+"/"+include)+"";
                         this.source = this.source.substring(0, match.index)+Preprocessor.indent(include, indent)+this.source.substring(Preprocessor.INCLUDE.lastIndex);
                     } catch (e) {
                         throw(new Error("File not found: "+include+" ("+e+")"));
                     }
-                    Preprocessor.EXPR.lastIndex = 0; // Start over again
+                    Preprocessor.EXPR.lastIndex = stack.length > 0 ? stack[stack.length-1].lastIndex : 0; // Start over again
+                    verbose("  continue at "+Preprocessor.EXPR.lastIndex);
+                    break;
+                case 'put':
+                    Preprocessor.PUT.lastIndex = match.index;
+                    if ((match2 = Preprocessor.PUT.exec(this.source)) === null) {
+                        throw(new Error("Illegal #"+match[2]+": "+this.source.substring(match.index, match.index+this.errorSourceAhead)+"..."));
+                    }
+                    include = match2[1];
+                    console.log("  expr: "+match2[1]);
+                    include = Preprocessor.evaluate(defines, match2[1]);
+                    verbose("  value: "+Preprocessor.nlToStr(include));
+                    this.source = this.source.substring(0, match.index)+indent+include+this.source.substring(Preprocessor.PUT.lastIndex);
+                    Preprocessor.EXPR.lastIndex = match.index + include.length;
+                    verbose("  continue at "+Preprocessor.EXPR.lastIndex);
                     break;
                 case 'ifdef':
                 case 'ifndef':
+                case 'if':
                     Preprocessor.IFDEF.lastIndex = match.index;
                     if ((match2 = Preprocessor.IFDEF.exec(this.source)) === null) {
                         throw(new Error("Illegal #"+match[2]+": "+this.source.substring(match.index, match.index+this.errorSourceAhead)+"..."));
                     }
                     verbose("  test: "+match2[2]);
+                    if (match2[1] == "ifdef") {
+                        include = !!defines[match2[2]];
+                    } else if (match2[1] == "ifndef") {
+                        include = !defines[match2[2]];
+                    } else {
+                        include = Preprocessor.evaluate(defines, match2[2]);
+                    }
+                    verbose("  value: "+include);
                     stack.push(p={
-                        "include": match2[1] == 'ifdef' ? !!defines[match2[2]] : !defines[match2[2]],
+                        "include": include,
                         "index": match.index,
                         "lastIndex": Preprocessor.IFDEF.lastIndex
                     });
@@ -170,6 +234,7 @@
                     break;
                 case 'endif':
                 case 'else':
+                case 'elif':
                     Preprocessor.ENDIF.lastIndex = match.index;
                     if ((match2 = Preprocessor.ENDIF.exec(this.source)) === null) {
                         throw(new Error("Illegal #"+match[2]+": "+this.source.substring(match.index, match.index+this.errorSourceAhead)+"..."));
@@ -181,24 +246,37 @@
                     verbose("  pop: "+JSON.stringify(before));
                     include = this.source.substring(before["lastIndex"], match.index);
                     if (before["include"]) {
-                        verbose("  incl: "+Preprocessor.nlToStr(include));
+                        verbose("  incl: "+Preprocessor.nlToStr(include)+", 0-"+before['index']+" + "+include.length+" bytes + "+Preprocessor.ENDIF.lastIndex+"-"+this.source.length);
                         this.source = this.source.substring(0, before["index"])+include+this.source.substring(Preprocessor.ENDIF.lastIndex);
                     } else {
-                        verbose("  excl: "+Preprocessor.nlToStr(include));
+                        verbose("  excl: "+Preprocessor.nlToStr(include)+", 0-"+before['index']+" + "+Preprocessor.ENDIF.lastIndex+"-"+this.source.length);
                         include = "";
                         this.source = this.source.substring(0, before["index"])+this.source.substring(Preprocessor.ENDIF.lastIndex);
                     }
-                    Preprocessor.EXPR.lastIndex = 0;
-                    if (match2[1] == "else") {
+                    if (this.source == "") {
+                        verbose("  result empty");
+                    }
+                    Preprocessor.EXPR.lastIndex = before["index"]+include.length;
+                    verbose("  continue at "+Preprocessor.EXPR.lastIndex);
+                    if (match2[1] == "else" || match2[1] == "elif") {
+                        if (match2[1] == 'else') {
+                            include = !before["include"];
+                        } else {
+                            include = Preprocessor.evaluate(defines, match2[2]);
+                        }
                         stack.push(p={
                             "include": !before["include"],
-                            "index": before["index"],
-                            "lastIndex": before["index"]+include.length
+                            "index": Preprocessor.EXPR.lastIndex,
+                            "lastIndex": Preprocessor.EXPR.lastIndex
                         });
                         verbose("  push: "+JSON.stringify(p));
                     }
                     break;
             }
+        }
+        if (stack.length > 0) {
+            before = stack.pop();
+            verbose("Still on stack: "+JSON.stringify(before));
         }
         return this.source;
     };

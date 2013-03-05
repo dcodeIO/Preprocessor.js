@@ -33,13 +33,29 @@ var suite = {
         var pp = new Preprocessor("// #ifdef UNDEFINED\ntest();\n// #endif\n");
         var msgs = "";
         pp.process({}, function(msg) { msgs += msg; });
-        test.equal(msgs, 'expr: ifdef @ 0-9  test: UNDEFINED  push: {"include":false,"index":0,"lastIndex":20}expr: endif @ 28-37  pop: {"include":false,"index":0,"lastIndex":20}  excl: [test();\\n]');
+        test.ok(msgs.length > 0);
         test.done();
     },
     
-    "test": function(test) {
-        var pp = new Preprocessor(fs.readFileSync(__dirname+"/test.js"), __dirname);
-        test.equal(pp.process({}).replace(/\r/, ""), '\nconsole.log("UNDEFINED is not defined");\n\nconsole.log("UNDEFINED is not defined (else)");\n');
+    "evaluate": function(test) {
+        var defines = {"VERSION": "1.0"};
+        test.equal('"'+defines["VERSION"]+'";', Preprocessor.evaluate(defines, "'\"'+VERSION+'\";'"));
+        test.equal('"'+"Hello world!"+'";', Preprocessor.evaluate(defines, "\"\\\"Hello world!\\\";\";"));
+        test.equal("2;", Preprocessor.evaluate(defines, "(1+1)+\";\""));
+        test.done();
+    },
+    
+    "test1": function(test) {
+        var pp = new Preprocessor(fs.readFileSync(__dirname+"/test1.js"), __dirname);
+        var src = pp.process({"VERSION": "1.0"}, console.log).replace(/\r/, "");
+        test.equal(src, '\nconsole.log("UNDEFINED is not defined");\n\nconsole.log("UNDEFINED is not defined (else)");\n\nvar version = "1.0";');
+        test.done();
+    },
+
+    "test2": function(test) {
+        var pp = new Preprocessor(fs.readFileSync(__dirname+"/test2.js"), __dirname);
+        var src = pp.process({"VERSION": "1.0"}, console.log).replace(/\r/, "");
+        test.equal(src, '    console.log(\"2==2\")\n    console.log(\"VERSION==\"+\"1.0\");');
         test.done();
     }
     
