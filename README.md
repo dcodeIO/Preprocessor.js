@@ -47,12 +47,14 @@ Features
 
 Usage
 -----
-Install via npm: `npm install -g preprocessor`
+Install via npm: `npm -g install preprocessor`
 
 #### Command line ####
 
+Usage: `preprocess sourceFile [baseDirectory] [-myKey[=myValue], ...] [> outFile]`
+
 ```bash
-preprocess.js Source.js . -FULL=true > Source.full.js
+preprocess Source.js . -FULL=true > Source.full.js
 ```
 
 #### node.js / CommonJS ####
