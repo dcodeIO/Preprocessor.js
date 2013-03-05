@@ -39,7 +39,7 @@ var suite = {
     
     "test": function(test) {
         var pp = new Preprocessor(fs.readFileSync(__dirname+"/test.js"), __dirname);
-        test.equal(pp.process({}), '\r\nconsole.log("UNDEFINED is not defined");\r\n\r\nconsole.log("UNDEFINED is not defined (else)");\r\n');
+        test.equal(pp.process({}), '\nconsole.log("UNDEFINED is not defined");\n\nconsole.log("UNDEFINED is not defined (else)");\n');
         test.done();
     }
     

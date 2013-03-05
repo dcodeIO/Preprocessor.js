@@ -24,6 +24,7 @@
     "engines": {
         "node": ">=0.6"
     },
+    "preferGlobal": true,
     "scripts": {
         "prepublish": "npm test",
         "test": "nodeunit tests/suite.js",
