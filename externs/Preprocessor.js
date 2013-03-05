@@ -34,6 +34,44 @@
 var Preprocessor = function(source, baseDir) {};
 
 /**
+ * @param {string} str
+ * @returns {string}
+ * @nosideeffects
+ */
+Preprocessor.stripSlashes = function(str) {};
+
+/**
+ * @param {string} str
+ * @return {string}
+ * @nosideeffects
+ */
+Preprocessor.addSlashes = function(str) {};
+
+/**
+ * @param {string} str
+ * @param {string} indent
+ * @return {string}
+ * @nosideeffects
+ */
+Preprocessor.indent = function(str, indent) {};
+
+/**
+ * @param {string} str
+ * @return {string}
+ * @nosideeffects
+ */
+Preprocessor.nlToStr = function(str) {};
+
+/**
+ * @param {object.<strin,string>} defines
+ * @param {string} expr
+ * @return {*}
+ * @throws {Error}
+ * @nosideeffects
+ */
+Preprocessor.evaluate = function(defines, expr) {};
+
+/**
  * @param {object.<string,*>} directives
  * @return {string}
  */

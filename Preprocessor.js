@@ -89,7 +89,7 @@
     /**
      * Strips slashes from an escaped string.
      * @param {string} str Escaped string
-     * @returns {string} Unescaped string
+     * @return {string} Unescaped string
      * @expose
      */
     Preprocessor.stripSlashes = function(str) {
@@ -107,7 +107,7 @@
     /**
      * Adds slashes to an unescaped string.
      * @param {string} str Unescaped string
-     * @returns {string} Escaped string
+     * @return {string} Escaped string
      * @expose
      */
     Preprocessor.addSlashes = function(str) {
@@ -132,7 +132,7 @@
     /**
      * Transforms a string for display in error messages.
      * @param {string} str String to transform
-     * @returns {string}
+     * @return {string}
      * @expose
      */
     Preprocessor.nlToStr = function(str) {
@@ -143,7 +143,8 @@
      * Evaluates an expression.
      * @param {object.<strin,string>} defines Defines
      * @param {string} expr Expression to evaluate
-     * @return Expression result
+     * @return {*} Expression result
+     * @throws {Error} If the expression cannot be evaluated
      * @expose
      */
     Preprocessor.evaluate = function(defines, expr) {
@@ -164,8 +165,8 @@
      * @param {object.<string,string>} defines Defines
      * @param {function(string)=} verbose Print verbose processing information to the specified function as the first parameter. Defaults to not print debug information.
      * @return {string} Processed source
-     * @expose
      * @throws {Error} If the source cannot be pre-processed
+     * @expose
      */
     Preprocessor.prototype.process = function(defines, verbose) {
         defines = defines || {};
@@ -202,7 +203,7 @@
                         throw(new Error("Illegal #"+match[2]+": "+this.source.substring(match.index, match.index+this.errorSourceAhead)+"..."));
                     }
                     include = match2[1];
-                    console.log("  expr: "+match2[1]);
+                    verbose("  expr: "+match2[1]);
                     include = Preprocessor.evaluate(defines, match2[1]);
                     verbose("  value: "+Preprocessor.nlToStr(include));
                     this.source = this.source.substring(0, match.index)+indent+include+this.source.substring(Preprocessor.PUT.lastIndex);
