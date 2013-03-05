@@ -19,7 +19,7 @@
  * @author Daniel Wirtz <dcode@dcode.io>
  */
 
-var Preprocessor = require(__dirname+"/../Preprocessor.min.js"),
+var Preprocessor = require(__dirname+"/../Preprocessor.js"),
     fs = require("fs");
 
 var suite = {
@@ -48,14 +48,14 @@ var suite = {
     "test1": function(test) {
         var pp = new Preprocessor(fs.readFileSync(__dirname+"/test1.js"), __dirname);
         var src = pp.process({"VERSION": "1.0"}, console.log).replace(/\r/, "");
-        test.equal(src, '\nconsole.log("UNDEFINED is not defined");\n\nconsole.log("UNDEFINED is not defined (else)");\n\nvar version = "1.0";');
+        test.equal(src, '\nconsole.log("UNDEFINED is not defined");\n\nconsole.log("UNDEFINED is not defined (else)");\n\nvar version = "1.0";\n');
         test.done();
     },
 
     "test2": function(test) {
         var pp = new Preprocessor(fs.readFileSync(__dirname+"/test2.js"), __dirname);
         var src = pp.process({"VERSION": "1.0"}, console.log).replace(/\r/, "");
-        test.equal(src, '    console.log(\"2==2\")\n    console.log(\"VERSION==\"+\"1.0\");');
+        test.equal(src, '    console.log("2==2")\n    console.log("VERSION=="+"1.0");\n');
         test.done();
     }
     

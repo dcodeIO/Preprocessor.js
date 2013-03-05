@@ -84,7 +84,7 @@
      * #put SOMEDEFINE / #put "Some string"
      * @type {RegExp}
      */
-    Preprocessor.PUT = /put[ ]+([^\n]+)[ ]*\r?\n/g;
+    Preprocessor.PUT = /put[ ]+([^\n]+)[ ]*/g;
 
     /**
      * Strips slashes from an escaped string.
