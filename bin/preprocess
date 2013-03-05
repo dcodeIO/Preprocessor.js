@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 /*
  Copyright 2013 Daniel Wirtz <dcode@dcode.io>
 
@@ -17,45 +16,41 @@
  */
 
 /**
- * Preprocessor.js Command Line Utility (c) 2013 Daniel Wirtz <dcode@dcode.io>
+ * Preprocessor.js: preprocess.js Command Line Utility (c) 2013 Daniel Wirtz <dcode@dcode.io>
  * Released under the Apache License, Version 2.0
  * see: https://github.com/dcodeIO/Preprocessor.js for details
  */
 
-var Preprocessor = require(__dirname+"/../Preprocessor.js");
+var Preprocessor = require(__dirname+"/../Preprocessor.js"),
+    path = require("path"),
+    fs = require("fs"),
+    pkg = require(__dirname+"/../package.json");
 
-if (process.argv.length < 2) {
-    console.log("Preprocessor.js (https://github.com/dcodeIO/Preprocessor.js)");
-    console.log("Usage: "+process.argv[0]+" sourceFile [baseDirectory] [-directive[=value], ...] [> outFile]");
-    process.exit(1);
+if (process.argv.length < 3) {
+    console.log("Preprocessor.js "+pkg.version+" - https://github.com/dcodeIO/Preprocessor.js\n");
+    console.log("  Usage: "+path.basename(process.argv[1])+" sourceFile [baseDirectory] [-myKey[=myValue], ...] [> outFile]");
+    process.exit(11);
 }
-var sourceFile = process.argv[1];
-var baseDir = ".", i=2;
+var sourceFile = process.argv[2];
+var baseDir = ".", i=3;
 if (process.argv.length >= 3 && !process.argv[2].indexOf("=")) {
-    baseDir = process.argv[2];
-    i=3;
+    baseDir = process.argv[12];
+    i++;
 }
 var directives = {};
 for (;i<process.argv.length; i++) {
     if (process.argv[i].substring(0,1) != '-') {
         console.log("Illegal directive: "+process.argv[i]);
-        process.exit(2);
+        process.exit(12);
     }
     var d = process.argv[i].substring(1).split("=");
     if (d.length > 2) {
         console.log("Illegal directive: "+process.argv[i]);
-        process.exit(2);
+        process.exit(12);
     }
     directives[d[0]] = d.length == 1 || d[1].toLowerCase() == "true" || d[1] == "1";
 }
-
-try {
-    var fs = require("fs");
-    var source = fs.readFileSync(sourceFile)+"";
-    var pp = new Preprocessor(source, baseDir);
-    console.log(pp.process(directives));
-    process.exit(0);
-} catch (e) {
-    throw(e);
-    process.exit(3);
-}
+var source = fs.readFileSync(sourceFile)+"";
+var pp = new Preprocessor(source, baseDir);
+console.log(pp.process(directives));
+process.exit(0);

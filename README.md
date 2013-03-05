@@ -52,7 +52,7 @@ Install via npm: `npm install -g preprocessor`
 #### Command line ####
 
 ```bash
-preprocess Source.js . -FULL=true > Source.full.js
+preprocess.js Source.js . -FULL=true > Source.full.js
 ```
 
 #### node.js / CommonJS ####
