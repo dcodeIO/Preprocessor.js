@@ -1,0 +1,32 @@
+{
+    "name": "proprocessor",
+    "version": "0.9.0",
+    "author": "Daniel Wirtz <dcode@dcode.io>",
+    "description": "A JavaScript source file preprocessor, e.g. to build different versions of a library.",
+    "contributors": [
+        { "name": "Daniel Wirtz", "email": "dcode@dcode.io" }
+    ],
+    "main": "Preprocessor.js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/dcodeIO/Preprocessor.js.git"
+    },
+    "keywords": ["source", "source code", "JavaScript", "ECMAScript", "preprocessor", "pre-processor", "pre processor", "processor", "utility"],
+    "dependencies": {
+    },
+    "devDependencies": {
+        "nodeunit": ">=0.7"
+    },
+    "license": "Apache License, Version 2.0",
+    "engines": {
+        "node": ">=0.6"
+    },
+    "scripts": {
+        "prepublish": "npm test",
+        "test": "nodeunit tests/suite.js",
+
+        "make": "npm run-script compile && npm test && npm run-script jsdoc",
+        "compile": "java -jar closure-compiler/compiler.jar --create_source_map Preprocessor.min.map --compilation_level ADVANCED_OPTIMIZATIONS --externs externs/fs.js --js Preprocessor.js --js_output_file Preprocessor.min.js",
+        "jsdoc": "jsdoc -c jsdoc.json"
+    }
+}
