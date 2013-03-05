@@ -1,4 +1,4 @@
-Preprocesor.js - A JavaScript preprocessor [![Build Status](https://travis-ci.org/dcodeIO/Preprocessor.js.png?branch=master)](https://travis-ci.org/dcodeIO/Preprocessor.js)
+Preprocessor.js - A JavaScript preprocessor [![Build Status](https://travis-ci.org/dcodeIO/Preprocessor.js.png?branch=master)](https://travis-ci.org/dcodeIO/Preprocessor.js)
 ==========================================
 Provides a JavaScript source file preprocessor, e.g. to build different versions of a library.
 
@@ -68,13 +68,15 @@ console.log(pp.process({
 ```
 
 #### RequireJS / AMD ####
+
+```javascript
 var Preprocessor = require("/path/to/Preprocessor.js");
 var source = "...";
 var pp = new Preprocessor(source, ".");
 console.log(pp.process({
     FULL: true
 }));
-````
+```
 
 #### Browser / shim ####
 Note: The `#include` directive is not available when run in the browser.
@@ -103,7 +105,7 @@ Documentation
 
 Tests (& Examples)
 ------------------
-* [View source](https://github.com/dcodeIO/ByteBuffer.js/blob/master/tests/suite.js)
+* [View source](https://github.com/dcodeIO/Preprocessor.js/blob/master/tests/suite.js)
 * [View report](https://travis-ci.org/dcodeIO/Preprocessor.js)
 
 License
