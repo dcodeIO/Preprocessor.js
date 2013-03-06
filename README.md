@@ -1,7 +1,8 @@
 Preprocessor.js - A JavaScript preprocessor [![Build Status](https://travis-ci.org/dcodeIO/Preprocessor.js.png?branch=master)](https://travis-ci.org/dcodeIO/Preprocessor.js)
 ===========================================
 Provides a JavaScript source file preprocessor, e.g. to build different versions of a library. It's for example used to
-build [ProtoBuf.js](https://github.com/dcodeIO/ProtoBuf.js) (see the [build script](https://github.com/dcodeIO/ProtoBuf.js/blob/master/build.js)).
+build [ProtoBuf.js](https://github.com/dcodeIO/ProtoBuf.js) (its [build](https://github.com/dcodeIO/ProtoBuf.js/blob/master/build.js)
+and [main script](https://github.com/dcodeIO/ProtoBuf.js/blob/master/src/ProtoBuf.js]) are quite good examples).
 
 Directives
 ----------
