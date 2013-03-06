@@ -34,24 +34,28 @@
         /**
          * Source code to pre-process.
          * @type {string}
+         * @expose
          */
         this.source = ""+source;
 
         /**
          * Source base directory.
          * @type {string}
+         * @expose
          */
         this.baseDir = baseDir || ".";
 
         /**
          * Whether running inside of node.js or not.
          * @type {boolean}
+         * @expose
          */
         this.isNode = (typeof window == 'undefined' || !window.window) && typeof require == 'function';
 
         /**
          * Error reporting source ahead length.
          * @type {number}
+         * @expose
          */
         this.errorSourceAhead = 50;
     };
@@ -69,19 +73,19 @@
     Preprocessor.INCLUDE = /include[ ]+"([^"\\]*(\\.[^"\\]*)*)"[ ]*\r?\n/g;
 
     /**
-     * #ifdef/#ifndef SOMEDEFINE
+     * #ifdef/#ifndef SOMEDEFINE, #if EXPRESSION
      * @type {RegExp}
      */
-    Preprocessor.IFDEF = /(ifdef|ifndef|if)[ ]*([^\r\n]+)\r?\n/g;
+    Preprocessor.IF = /(ifdef|ifndef|if)[ ]*([^\r\n]+)\r?\n/g;
 
     /**
-     * #endif/#else
+     * #endif/#else, #elif EXPRESSION
      * @type {RegExp}
      */
     Preprocessor.ENDIF = /(endif|else|elif)([ ]+[^\r\n]+)?\r?\n/g;
 
     /**
-     * #put SOMEDEFINE / #put "Some string"
+     * #put EXPRESSION
      * @type {RegExp}
      */
     Preprocessor.PUT = /put[ ]+([^\n]+)[ ]*/g;
@@ -213,8 +217,8 @@
                 case 'ifdef':
                 case 'ifndef':
                 case 'if':
-                    Preprocessor.IFDEF.lastIndex = match.index;
-                    if ((match2 = Preprocessor.IFDEF.exec(this.source)) === null) {
+                    Preprocessor.IF.lastIndex = match.index;
+                    if ((match2 = Preprocessor.IF.exec(this.source)) === null) {
                         throw(new Error("Illegal #"+match[2]+": "+this.source.substring(match.index, match.index+this.errorSourceAhead)+"..."));
                     }
                     verbose("  test: "+match2[2]);
@@ -229,7 +233,7 @@
                     stack.push(p={
                         "include": include,
                         "index": match.index,
-                        "lastIndex": Preprocessor.IFDEF.lastIndex
+                        "lastIndex": Preprocessor.IF.lastIndex
                     });
                     verbose("  push: "+JSON.stringify(p));
                     break;
