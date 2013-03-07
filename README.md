@@ -84,7 +84,7 @@ preprocess Source.js . -FULL=true > Source.full.js
 var Preprocessor = require("preprocessor");
 
 var source = "...";
-var pp = new Preprocessor(source, ".");
+var pp = new Preprocessor(source, /* baseDirectory */ ".");
 console.log(pp.process({
     FULL: true
 }));
@@ -95,7 +95,7 @@ console.log(pp.process({
 ```javascript
 var Preprocessor = require("/path/to/Preprocessor.js");
 var source = "...";
-var pp = new Preprocessor(source, ".");
+var pp = new Preprocessor(source, /* baseDirectory */  ".");
 console.log(pp.process({
     FULL: true
 }));
