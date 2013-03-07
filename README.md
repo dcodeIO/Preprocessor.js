@@ -6,7 +6,7 @@ and [main script](https://github.com/dcodeIO/ProtoBuf.js/blob/master/src/ProtoBu
 
 Directives
 ----------
-* Includes (always relative to the `baseDirectory`, default to "."):
+* Includes (always relative to the `baseDirectory`, defaults to "."):
 
  ```javascript
  ...
