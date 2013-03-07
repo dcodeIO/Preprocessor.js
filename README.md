@@ -6,7 +6,7 @@ and [main script](https://github.com/dcodeIO/ProtoBuf.js/blob/master/src/ProtoBu
 
 Directives
 ----------
-* Includes (not available when run in the browser):
+* Includes (not available when run in the browser, always relative to `baseDirectory`):
 
  ```javascript
  ...
