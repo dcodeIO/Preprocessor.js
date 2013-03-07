@@ -82,9 +82,8 @@ preprocess Source.js . -FULL=true > Source.full.js
 
 ```javascript
 var Preprocessor = require("preprocessor");
-
-var source = "...";
-var pp = new Preprocessor(source, /* baseDirectory */ ".");
+var source = "..."; // e.g. through fs.readFile
+var pp = new Preprocessor(source, /* baseDirectory or includes */ ".");
 console.log(pp.process({
     FULL: true
 }));
@@ -94,8 +93,8 @@ console.log(pp.process({
 
 ```javascript
 var Preprocessor = require("/path/to/Preprocessor.js");
-var source = "...";
-var pp = new Preprocessor(source, /* baseDirectory */  ".");
+var source = "..."; // e.g. through fs.readFile / $.ajax
+var pp = new Preprocessor(source, /* baseDirectory or includes */  ".");
 console.log(pp.process({
     FULL: true
 }));
@@ -110,8 +109,10 @@ Note: The `#include` directive is not available when run in the browser.
 
 ```javascript
 var Preprocessor = dcodeIO.Preprocessor;
-var source = "...";
-var pp = new Preprocessor(source);
+var source = "..."; // e.g. through. $.ajax
+var pp = new Preprocessor(source, /* includes */ {
+    "./includes/extension.js": "var myVar = 2;" // <- #include "includes/extension.js"
+});
 alert(pp.process({
     FULL: true
 }));

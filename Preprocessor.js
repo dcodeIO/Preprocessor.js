@@ -26,10 +26,11 @@
      * @exports Preprocessor
      * @class Provides pre-processing of JavaScript source files, e.g. to build different versions of a library.
      * @param {string} source Source to process
-     * @param {string} baseDir Source base directory used for includes when run in node.js. Defaults to the current working directory.
+     * @param {string|Object.<string,string>=} baseDirOrIncludes Source base directory used for includes (node.js only)
+     *  or an object containing all the included sources by filename. Defaults to the current working directory.
      * @constructor
      */
-    var Preprocessor = function Preprocessor(source, baseDir) {
+    var Preprocessor = function Preprocessor(source, baseDirOrIncludes) {
 
         /**
          * Source code to pre-process.
@@ -43,7 +44,13 @@
          * @type {string}
          * @expose
          */
-        this.baseDir = baseDir || ".";
+        this.baseDir = typeof baseDirOrIncludes == 'string' ? baseDirOrIncludes : ".";
+
+        /**
+         * Included sources by filename.
+         * @type {Object.<string, string>}
+         */
+        this.includes = typeof baseDirOrIncludes == 'object' ? baseDirOrIncludes : {};
 
         /**
          * Whether running inside of node.js or not.
@@ -183,21 +190,27 @@
             var indent = match[1];
             switch (match[2]) {
                 case 'include':
-                    if (!this.isNode) {
-                        throw(new Error("The #include directive requires Preprocessor.js to be run in node.js"));
-                    }
                     Preprocessor.INCLUDE.lastIndex = match.index;
                     if ((match2 = Preprocessor.INCLUDE.exec(this.source)) === null) {
                         throw(new Error("Illegal #"+match[2]+": "+this.source.substring(match.index, match.index+this.errorSourceAhead)+"..."));
                     }
                     include = Preprocessor.stripSlashes(match2[1]);
                     verbose("  incl: "+include);
-                    try {
-                        include = require("fs").readFileSync(this.baseDir+"/"+include)+"";
-                        this.source = this.source.substring(0, match.index)+Preprocessor.indent(include, indent)+this.source.substring(Preprocessor.INCLUDE.lastIndex);
-                    } catch (e) {
-                        throw(new Error("File not found: "+include+" ("+e+")"));
+                    if (typeof this.includes[include] != 'undefined') { // Do we already know it?
+                        include = this.includes[include];
+                    } else { // Load it if in node.js...
+                        if (!this.isNode) {
+                            throw(new Error("Failed to resolve include: "+this.baseDir+"/"+include));
+                        }
+                        try {
+                            var key = include;
+                            include = require("fs").readFileSync(this.baseDir+"/"+include)+"";
+                            this.includes[key] = include;
+                        } catch (e) {
+                            throw(new Error("File not found: "+include+" ("+e+")"));
+                        }
                     }
+                    this.source = this.source.substring(0, match.index)+Preprocessor.indent(include, indent)+this.source.substring(Preprocessor.INCLUDE.lastIndex);
                     Preprocessor.EXPR.lastIndex = stack.length > 0 ? stack[stack.length-1].lastIndex : 0; // Start over again
                     verbose("  continue at "+Preprocessor.EXPR.lastIndex);
                     break;
