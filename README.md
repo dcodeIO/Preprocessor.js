@@ -6,7 +6,7 @@ and [main script](https://github.com/dcodeIO/ProtoBuf.js/blob/master/src/ProtoBu
 
 Directives
 ----------
-* Includes (not available when run in the browser, always relative to `baseDirectory`):
+* Includes (always relative to the `baseDirectory`, default to "."):
 
  ```javascript
  ...
@@ -66,8 +66,8 @@ Features
 * Zero production dependencies
 * Small footprint
 
-Usage
------
+Command line utility
+--------------------
 Install via npm: `npm -g install preprocessor`
 
 #### Command line ####
@@ -78,12 +78,23 @@ Usage: `preprocess sourceFile [baseDirectory] [-myKey[=myValue], ...] [> outFile
 preprocess Source.js . -FULL=true > Source.full.js
 ```
 
+API
+---
+The API is quite simple:
+
+```javascript
+var result = new Preprocessor(mainFileSource, baseDirectoryOrIncludes).process(defines);
+```
+
+with `baseDirectoryOrIncludes` being either a string containing the path to the base directory or an object of included
+sources by filename. When running in a browser, only the later is supported.
+
 #### node.js / CommonJS ####
 
 ```javascript
 var Preprocessor = require("preprocessor");
 var source = "..."; // e.g. through fs.readFile
-var pp = new Preprocessor(source, /* baseDirectory or includes */ ".");
+var pp = new Preprocessor(source, ".");
 console.log(pp.process({
     FULL: true
 }));
@@ -94,14 +105,15 @@ console.log(pp.process({
 ```javascript
 var Preprocessor = require("/path/to/Preprocessor.js");
 var source = "..."; // e.g. through fs.readFile / $.ajax
-var pp = new Preprocessor(source, /* baseDirectory or includes */  ".");
+var pp = new Preprocessor(source, ".");
 console.log(pp.process({
     FULL: true
 }));
 ```
 
 #### Browser / shim ####
-Note: The `#include` directive is not available when run in the browser.
+**Note:** To use the `#include` directive in the browser, do not specify the base directory but an object of included
+sources by filename:
 
 ```html
 <script src="//raw.github.com/dcodeIO/Preprocessor.js/master/Preprocessor.min.js"></script>
@@ -110,13 +122,16 @@ Note: The `#include` directive is not available when run in the browser.
 ```javascript
 var Preprocessor = dcodeIO.Preprocessor;
 var source = "..."; // e.g. through. $.ajax
-var pp = new Preprocessor(source, /* includes */ {
+var pp = new Preprocessor(source, {
     "./includes/extension.js": "var myVar = 2;" // <- #include "includes/extension.js"
 });
 alert(pp.process({
     FULL: true
 }));
 ```
+
+Using includes instead of a base directory like shown in the example above is supported regardless of the platform you
+are on.
 
 Downloads
 ---------
