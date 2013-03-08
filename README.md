@@ -44,6 +44,7 @@ Directives
  // #elif 2==2
  console.log("2==2");
  // #endif
+ ```
  
 * Writing the result of evaluated expressions:
 
