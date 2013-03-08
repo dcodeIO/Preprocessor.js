@@ -1,4 +1,4 @@
-Preprocessor.js - A JavaScript preprocessor [![Build Status](https://travis-ci.org/dcodeIO/Preprocessor.js.png?branch=master)](https://travis-ci.org/dcodeIO/Preprocessor.js)
+![Preprocessor.js - A JavaScript preprocessor](https://raw.github.com/dcodeIO/Preprocessor.js/master/Preprocessor.png)
 ===========================================
 Provides a JavaScript source file preprocessor, e.g. to build different versions of a library. It's for example used to
 build [ProtoBuf.js](https://github.com/dcodeIO/ProtoBuf.js) (its [build](https://github.com/dcodeIO/ProtoBuf.js/blob/master/build.js)
@@ -142,7 +142,7 @@ Documentation
 -------------
 * [View documentation](http://htmlpreview.github.com/?http://github.com/dcodeIO/Preprocessor.js/master/docs/Preprocessor.html)
 
-Tests (& Examples)
+Tests (& Examples) [![Build Status](https://travis-ci.org/dcodeIO/Preprocessor.js.png?branch=master)](https://travis-ci.org/dcodeIO/Preprocessor.js)
 ------------------
 * [View source](https://github.com/dcodeIO/Preprocessor.js/blob/master/tests/suite.js)
 * [View report](https://travis-ci.org/dcodeIO/Preprocessor.js)
