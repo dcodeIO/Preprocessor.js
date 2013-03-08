@@ -50,7 +50,7 @@ Directives
 
   ```javascript
   var version = // #put '"'+VERSION+'";"
-  var str = // #put "\"Hello world!\";";
+  var str = // #put "\"Hello world!\";"
   var onePlusOne = // #put (1+1)+";"
   ```
  
@@ -84,7 +84,10 @@ API
 The API is quite simple:
 
 ```javascript
-var result = new Preprocessor(mainFileSource, baseDirectoryOrIncludes).process(defines);
+var result = new Preprocessor(
+    mainFileSource,
+    baseDirectoryOrIncludes
+).process(defines);
 ```
 
 with `baseDirectoryOrIncludes` being either a string containing the path to the base directory or an object of included
