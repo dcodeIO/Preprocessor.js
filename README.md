@@ -107,12 +107,13 @@ console.log(pp.process({
 #### RequireJS / AMD ####
 
 ```javascript
-var Preprocessor = require("/path/to/Preprocessor.js");
-var source = "..."; // e.g. through fs.readFile / $.ajax
-var pp = new Preprocessor(source, ".");
-console.log(pp.process({
-    FULL: true
-}));
+require(["/path/to/Preprocessor.js"], function(Preprocessor) {
+    var source = "..."; // e.g. through fs.readFile / $.ajax
+    var pp = new Preprocessor(source, ".");
+    console.log(pp.process({
+        FULL: true
+    }));
+});
 ```
 
 #### Browser / shim ####
