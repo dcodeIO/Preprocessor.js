@@ -1,6 +1,6 @@
 {
     "name": "preprocessor",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "author": "Daniel Wirtz <dcode@dcode.io>",
     "description": "A JavaScript source file preprocessor, e.g. to build different versions of a library.",
     "main": "Preprocessor.js",
