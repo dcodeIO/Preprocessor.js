@@ -19,7 +19,7 @@
  * @author Daniel Wirtz <dcode@dcode.io>
  */
 
-var Preprocessor = require(__dirname+"/../Preprocessor.js"),
+var Preprocessor = require(__dirname+"/../Preprocessor.min.js"),
     fs = require("fs");
 
 var suite = {

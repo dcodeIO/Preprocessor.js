@@ -18,7 +18,8 @@
     "dependencies": {
     },
     "devDependencies": {
-        "nodeunit": ">=0.7"
+        "nodeunit": ">=0.7",
+        "closurecompiler": ">=1.1"
     },
     "license": "Apache License, Version 2.0",
     "engines": {
@@ -29,7 +30,7 @@
         "test": "nodeunit tests/suite.js",
 
         "make": "npm run-script compile && npm test && npm run-script jsdoc",
-        "compile": "java -jar closure-compiler/compiler.jar --create_source_map Preprocessor.min.map --compilation_level ADVANCED_OPTIMIZATIONS --externs externs/fs.js --js Preprocessor.js --js_output_file Preprocessor.min.js",
+        "compile": "ccjs Preprocessor.js --create_source_map=Preprocessor.min.map --compilation_level=ADVANCED_OPTIMIZATIONS --externs=node > Preprocessor.min.js",
         "jsdoc": "jsdoc -c jsdoc.json"
     }
 }
