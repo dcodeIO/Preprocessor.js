@@ -89,7 +89,7 @@
      * #endif/#else, #elif EXPRESSION
      * @type {RegExp}
      */
-    Preprocessor.ENDIF = /(endif|else|elif)([ ]+[^\r\n]+)?\r?\n/g;
+    Preprocessor.ENDIF = /(endif|else|elif)([ ]+[^\r\n]+)?\r?(?:\n|$)/g;
 
     /**
      * #put EXPRESSION
