@@ -49,7 +49,7 @@ Directives
 * Writing the result of evaluated expressions:
 
   ```javascript
-  var version = // #put '"'+VERSION+'";"
+  var version = // #put '"'+VERSION+'";"'
   var str = // #put "\"Hello world!\";"
   var onePlusOne = // #put (1+1)+";"
   ```
