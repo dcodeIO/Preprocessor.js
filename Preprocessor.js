@@ -77,7 +77,7 @@
      * #include "path/to/file". Requires node.js' "fs" module.
      * @type {RegExp}
      */
-    Preprocessor.INCLUDE = /include[ ]+"([^"\\]*(\\.[^"\\]*)*)"[ ]*\r?\n/g;
+    Preprocessor.INCLUDE = /include[ ]+"([^"\\]*(\\.[^"\\]*)*)"[ ]*(?:\r|\n|$)/g;
 
     /**
      * #ifdef/#ifndef SOMEDEFINE, #if EXPRESSION
