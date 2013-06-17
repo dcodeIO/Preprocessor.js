@@ -10,7 +10,7 @@ Directives
 
  ```javascript
  ...
- // #include "path/to/file.js"`
+ // #include "path/to/file.js"
  ...
  ```
 
