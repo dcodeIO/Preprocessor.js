@@ -48,7 +48,7 @@ for (;i<process.argv.length; i++) {
         console.log("Illegal directive: "+process.argv[i]);
         process.exit(12);
     }
-    directives[d[0]] = d.length == 1 || d[1].toLowerCase() == "true" || d[1] == "1";
+    directives[d[0]] = d.length == 1 || d[1].toLowerCase() === "true" || d[1] === "1" || d[1];
 }
 var source = fs.readFileSync(sourceFile)+"";
 var pp = new Preprocessor(source, baseDir);
