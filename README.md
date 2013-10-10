@@ -45,6 +45,14 @@ Directives
  console.log("2==2");
  // #endif
  ```
+
+* Inline variables and functions:
+
+ ```js
+ // #define var PI=Math.PI
+ // #define function RADTODEG(x){return x*180/PI}
+ var angle = // #put RADTODEG(3)+";"
+ ```
  
 * Writing the result of evaluated expressions:
 

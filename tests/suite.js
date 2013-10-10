@@ -57,6 +57,13 @@ var suite = {
         var src = pp.process({"VERSION": "1.0"}, console.log).replace(/\r/, "");
         test.equal(src, '    console.log("2==2")\n    console.log("VERSION=="+"1.0");\n');
         test.done();
+    },
+    
+    "define": function(test) {
+        var pp = new Preprocessor(fs.readFileSync(__dirname+"/define.js"), __dirname);
+        var src = pp.process({}, console.log).replace(/\r/, "");
+        test.equal(src, 'var angle = 171.88733853924697;\n');
+        test.done();
     }
     
 };

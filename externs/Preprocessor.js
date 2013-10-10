@@ -63,16 +63,16 @@ Preprocessor.indent = function(str, indent) {};
 Preprocessor.nlToStr = function(str) {};
 
 /**
- * @param {object.<strin,string>} defines
- * @param {string} expr
+ * @param {Object.<string,string>} runtimeDefines
+ * @param {Array.<string>|string} inlineDefines
+ * @param {string=} expr
  * @return {*}
  * @throws {Error}
- * @nosideeffects
  */
-Preprocessor.evaluate = function(defines, expr) {};
+Preprocessor.evaluate = function(runtimeDefines, inlineDefines, expr) {};
 
 /**
- * @param {object.<string,*>} directives
+ * @param {Object.<string,*>} directives
  * @return {string}
  */
 Preprocessor.prototype.process = function(directives) {};

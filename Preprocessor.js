@@ -65,13 +65,19 @@
          * @expose
          */
         this.errorSourceAhead = 50;
+
+        /**
+         * Runtime defines.
+         * @type {Array.<string>}
+         */
+        this.defines = [];
     };
 
     /**
      * Definition expression
      * @type {RegExp}
      */
-    Preprocessor.EXPR = /([ ]*)\/\/[ ]+#(include|ifn?def|if|endif|else|elif|put)/g;
+    Preprocessor.EXPR = /([ ]*)\/\/[ ]+#(include|ifn?def|if|endif|else|elif|put|define)/g;
 
     /**
      * #include "path/to/file". Requires node.js' "fs" module.
@@ -96,6 +102,12 @@
      * @type {RegExp}
      */
     Preprocessor.PUT = /put[ ]+([^\n]+)[ ]*/g;
+
+    /**
+     * #define EXPRESSION
+     * @type {RegExp}
+     */
+    Preprocessor.DEFINE = /define[ ]+([^\n]+)\r?(?:\n|$)/g;
 
     /**
      * Strips slashes from an escaped string.
@@ -152,27 +164,38 @@
     
     /**
      * Evaluates an expression.
-     * @param {object.<strin,string>} defines Defines
-     * @param {string} expr Expression to evaluate
+     * @param {object.<string,string>} runtimeDefines Runtime defines
+     * @param {Array.<string>|string} inlineDefines Inline defines (optional for backward compatibility)
+     * @param {string=} expr Expression to evaluate
      * @return {*} Expression result
      * @throws {Error} If the expression cannot be evaluated
      * @expose
      */
-    Preprocessor.evaluate = function(defines, expr) {
+    Preprocessor.evaluate = function(runtimeDefines, inlineDefines, expr) {
+        if (typeof inlineDefines === 'string') {
+            expr = inlineDefines;
+            inlineDefines = [];
+        }
         var addSlashes = Preprocessor.addSlashes;
-        return (function(defines, expr) {
-            var Preprocessor = null;
-            for (var key in defines) {
-                if (defines.hasOwnProperty(key)) {
-                    eval("var "+key+" = \""+addSlashes(""+defines[key])+"\";");
+        return (function(runtimeDefines, inlineDefines, expr) {
+            for (var key in runtimeDefines) {
+                if (runtimeDefines.hasOwnProperty(key)) {
+                    eval("var "+key+" = \""+addSlashes(""+runtimeDefines[key])+"\";");
                 }
             }
+            for (var i=0; i<inlineDefines.length; i++) {
+                var def = inlineDefines[i];
+                if (def.substring(0,9) != 'function ' && def.substring(0,4) != 'var ') {
+                    def = "var "+def; // Enforce local
+                }
+                eval(def);
+            }
             return eval(expr);
-        }).bind(null)(defines, expr);
+        }).bind(null)(runtimeDefines, inlineDefines, expr);
     };
 
     /**
-     * Runs the Preprocesses.
+     * Preprocesses.
      * @param {object.<string,string>} defines Defines
      * @param {function(string)=} verbose Print verbose processing information to the specified function as the first parameter. Defaults to not print debug information.
      * @return {string} Processed source
@@ -221,7 +244,7 @@
                     }
                     include = match2[1];
                     verbose("  expr: "+match2[1]);
-                    include = Preprocessor.evaluate(defines, match2[1]);
+                    include = Preprocessor.evaluate(defines, this.defines, match2[1]);
                     verbose("  value: "+Preprocessor.nlToStr(include));
                     this.source = this.source.substring(0, match.index)+indent+include+this.source.substring(Preprocessor.PUT.lastIndex);
                     Preprocessor.EXPR.lastIndex = match.index + include.length;
@@ -240,7 +263,7 @@
                     } else if (match2[1] == "ifndef") {
                         include = !defines[match2[2]];
                     } else {
-                        include = Preprocessor.evaluate(defines, match2[2]);
+                        include = Preprocessor.evaluate(defines, this.defines, match2[2]);
                     }
                     verbose("  value: "+include);
                     stack.push(p={
@@ -280,7 +303,7 @@
                         if (match2[1] == 'else') {
                             include = !before["include"];
                         } else {
-                            include = Preprocessor.evaluate(defines, match2[2]);
+                            include = Preprocessor.evaluate(defines, this.defines, match2[2]);
                         }
                         stack.push(p={
                             "include": !before["include"],
@@ -290,6 +313,18 @@
                         verbose("  push: "+JSON.stringify(p));
                     }
                     break;
+                case 'define':
+                    // https://github.com/dcodeIO/Preprocessor.js/issues/5
+                    Preprocessor.DEFINE.lastIndex = match.index;
+                    if ((match2 = Preprocessor.DEFINE.exec(this.source)) === null) {
+                        throw(new Error("Illegal #"+match[2]+": "+this.source.substring(match.index, match.index+this.errorSourceAhead)+"..."));
+                    }
+                    var define = match2[1];
+                    verbose("  def: "+match2[1]);
+                    this.defines.push(define);
+                    this.source = this.source.substring(0, match.index)+indent+this.source.substring(Preprocessor.DEFINE.lastIndex);
+                    Preprocessor.EXPR.lastIndex = match.index;
+                    verbose("  continue at "+Preprocessor.EXPR.lastIndex);
             }
         }
         if (stack.length > 0) {

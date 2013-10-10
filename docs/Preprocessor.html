@@ -206,6 +206,51 @@
         <dl>
             
 <dt>
+    <h4 class="name" id="DEFINE"><span class="type-signature">&lt;static> </span>DEFINE<span class="type-signature"> :RegExp</span></h4>
+    
+    
+</dt>
+<dd>
+    
+    <div class="description">
+        #define EXPRESSION
+    </div>
+    
+    
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+    
+    
+</dd>
+
+        
+            
+<dt>
     <h4 class="name" id="ENDIF"><span class="type-signature">&lt;static> </span>ENDIF<span class="type-signature"> :RegExp</span></h4>
     
     
@@ -439,6 +484,51 @@
     
     <div class="description">
         Source base directory.
+    </div>
+    
+    
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+    
+    
+</dd>
+
+        
+            
+<dt>
+    <h4 class="name" id="defines"><span class="type-signature"></span>defines<span class="type-signature"> :Array.&lt;string></span></h4>
+    
+    
+</dt>
+<dd>
+    
+    <div class="description">
+        Runtime defines.
     </div>
     
     
@@ -790,7 +880,7 @@
         
             
 <dt>
-    <h4 class="name" id="evaluate"><span class="type-signature">&lt;static> </span>evaluate<span class="signature">(defines, expr)</span><span class="type-signature"> &rarr; {*}</span></h4>
+    <h4 class="name" id="evaluate"><span class="type-signature">&lt;static> </span>evaluate<span class="signature">(runtimeDefines, inlineDefines, <span class="optional">expr</span>)</span><span class="type-signature"> &rarr; {*}</span></h4>
     
     
 </dt>
@@ -820,6 +910,8 @@
 		<th>Type</th>
 		
 		
+		<th>Argument</th>
+		
 		
 		
 		
@@ -832,23 +924,61 @@
 	
         <tr>
             
-                <td class="name"><code>defines</code></td>
+                <td class="name"><code>runtimeDefines</code></td>
             
             
             <td class="type">
             
                 
-<span class="param-type">object.&lt;strin,string></span>
+<span class="param-type">object.&lt;string,string></span>
 
 
             
             </td>
             
             
+                <td class="attributes">
+                
+                    
+                
+                </td>
             
             
             
-            <td class="description last">Defines</td>
+            
+            <td class="description last">Runtime defines</td>
+        </tr>
+	
+	
+	
+        <tr>
+            
+                <td class="name"><code>inlineDefines</code></td>
+            
+            
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;string></span>
+|
+
+<span class="param-type">string</span>
+
+
+            
+            </td>
+            
+            
+                <td class="attributes">
+                
+                    
+                
+                </td>
+            
+            
+            
+            
+            <td class="description last">Inline defines (optional for backward compatibility)</td>
         </tr>
 	
 	
@@ -867,6 +997,14 @@
             
             </td>
             
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+                    
+                
+                </td>
             
             
             
@@ -1374,7 +1512,7 @@
     
     
     <div class="description">
-        Runs the Preprocesses.
+        Preprocesses.
     </div>
     
 
