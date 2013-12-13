@@ -64,8 +64,19 @@ var suite = {
         var src = pp.process({}, console.log).replace(/\r/, "");
         test.equal(src, 'var angle = 171.88733853924697;\n');
         test.done();
+    },
+
+    "require": function(test) {
+        var pp = new Preprocessor("// #include \"number.js\"\n// #include \"number.js\"\n", __dirname);
+        var src = pp.process({}, console.log).replace(/\r/, "");
+        test.equal(src.trim(), '42\n42');
+
+        var pp = new Preprocessor("// #require \"number.js\"\n// #require \"number.js\"\n", __dirname);
+        var src = pp.process({}, console.log).replace(/\r/, "");
+        test.equal(src.trim(), '42');
+
+        test.done();
     }
-    
 };
 
 module.exports = suite;
