@@ -1,6 +1,6 @@
 {
     "name": "preprocessor",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "author": "Daniel Wirtz <dcode@dcode.io>",
     "description": "Preprocessor.js: A JavaScript source file preprocessor, e.g. to build different versions of a library.",
     "main": "Preprocessor.js",
@@ -18,8 +18,8 @@
     "dependencies": {
     },
     "devDependencies": {
-        "nodeunit": ">=0.7",
-        "closurecompiler": ">=1.1"
+        "testjs": "latest",
+        "closurecompiler": "latest"
     },
     "license": "Apache License, Version 2.0",
     "engines": {

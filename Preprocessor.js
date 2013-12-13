@@ -77,13 +77,13 @@
      * Definition expression
      * @type {RegExp}
      */
-    Preprocessor.EXPR = /([ ]*)\/\/[ ]+#(include|require|ifn?def|if|endif|else|elif|put|define)/g;
+    Preprocessor.EXPR = /([ ]*)\/\/[ ]+#(include_once|include|ifn?def|if|endif|else|elif|put|define)/g;
 
     /**
      * #include "path/to/file". Requires node.js' "fs" module.
      * @type {RegExp}
      */
-    Preprocessor.INCLUDE = /(include|require)[ ]+"([^"\\]*(\\.[^"\\]*)*)"[ ]*\r?(?:\n|$)/g;
+    Preprocessor.INCLUDE = /(include_once|include)[ ]+"([^"\\]*(\\.[^"\\]*)*)"[ ]*\r?(?:\n|$)/g;
 
     /**
      * #ifdef/#ifndef SOMEDEFINE, #if EXPRESSION
@@ -212,19 +212,19 @@
             verbose(match[2]+" @ "+match.index+"-"+Preprocessor.EXPR.lastIndex);
             var indent = match[1];
             switch (match[2]) {
+                case 'include_once':
                 case 'include':
-                case 'require':
                     Preprocessor.INCLUDE.lastIndex = match.index;
                     if ((match2 = Preprocessor.INCLUDE.exec(this.source)) === null) {
                         throw(new Error("Illegal #"+match[2]+": "+this.source.substring(match.index, match.index+this.errorSourceAhead)+"..."));
                     }
                     include = Preprocessor.stripSlashes(match2[2]);
-                    verbose("  incl: "+include);
-                    if (typeof this.includes[include] != 'undefined') { // Do we already know it?
-                        if (match2[1] == "require") {
-                            verbose("  Required filed already included: "+this.baseDir+"/"+include);
+                    if (typeof this.includes[include] !== 'undefined') { // Do we already know it?
+                        if (match2[1] === "include_once") {
+                            verbose("  skip incl: "+include);
                             include = "";
                         } else {
+                            verbose("  incl: "+include);
                             include = this.includes[include];
                         }
                     } else { // Load it if in node.js...

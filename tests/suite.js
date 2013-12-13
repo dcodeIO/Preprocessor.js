@@ -18,7 +18,6 @@
  * Preprocessor.js Test Suite.
  * @author Daniel Wirtz <dcode@dcode.io>
  */
-
 var Preprocessor = require(__dirname+"/../Preprocessor.min.js"),
     fs = require("fs");
 
@@ -66,14 +65,14 @@ var suite = {
         test.done();
     },
 
-    "require": function(test) {
-        var pp = new Preprocessor("// #include \"number.js\"\n// #include \"number.js\"\n", __dirname);
-        var src = pp.process({}, console.log).replace(/\r/, "");
-        test.equal(src.trim(), '42\n42');
+    "include": function(test) {
+        var pp = new Preprocessor("// #include \"number.js\"\n// #include \"number.js\"\n", __dirname),
+            src = pp.process({}, console.log).replace(/\r/, "");
+        test.strictEqual(src.trim(), '42\n42');
 
-        var pp = new Preprocessor("// #require \"number.js\"\n// #require \"number.js\"\n", __dirname);
-        var src = pp.process({}, console.log).replace(/\r/, "");
-        test.equal(src.trim(), '42');
+        pp = new Preprocessor("// #include_once \"number.js\"\n// #include_once \"number.js\"\n", __dirname);
+        src = pp.process({}, console.log).replace(/\r/, "");
+        test.strictEqual(src.trim(), '42');
 
         test.done();
     }
