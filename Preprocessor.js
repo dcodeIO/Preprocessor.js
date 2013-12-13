@@ -194,6 +194,13 @@
         }).bind(null)(runtimeDefines, inlineDefines, expr);
     };
 
+    function dirname ( path ) {
+        return path.replace(/\\/g, '/').split('/').slice(0, -1).join("/");
+    }
+    function relative ( item ) {
+        return (item.charAt(0) === "/" || item.indexOf("./") === 0) ? item : "/" + item;
+    }
+
     /**
      * Preprocesses.
      * @param {object.<string,string>} defines Defines
@@ -232,9 +239,13 @@
                             throw(new Error("Failed to resolve include: "+this.baseDir+"/"+include));
                         }
                         try {
-                            var key = include;
-                            include = require("fs").readFileSync(this.baseDir+"/"+include)+"";
-                            this.includes[key] = include;
+                            var item = include, PATH = require("path"), pp,
+                                include_filename = PATH.join(this.baseDir, relative(item)),
+                                include_dirname = dirname(include_filename);
+                            //console.log("%s > %s", include_dirname, include_filename);
+                            include = require("fs").readFileSync(include_filename) + "";
+                            pp = new Preprocessor(include, include_dirname);
+                            include = this.includes[item] = pp.process(defines, verbose);
                         } catch (e) {
                             throw(new Error("File not found: "+include+" ("+e+")"));
                         }
