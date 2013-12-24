@@ -1,36 +1,46 @@
 {
-    "name": "preprocessor",
-    "version": "1.2.0",
-    "author": "Daniel Wirtz <dcode@dcode.io>",
-    "description": "Preprocessor.js: A JavaScript source file preprocessor, e.g. to build different versions of a library.",
-    "main": "Preprocessor.js",
-    "bin": {
-        "preprocess": "./bin/preprocess"
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/dcodeIO/Preprocessor.js.git"
-    },
-    "bugs": {
-        "url": "https://github.com/dcodeIO/Preprocessor.js/issues"
-    },
-    "keywords": ["source", "source code", "JavaScript", "ECMAScript", "preprocessor", "pre-processor", "pre processor", "processor", "utility"],
-    "dependencies": {
-    },
-    "devDependencies": {
-        "testjs": "latest",
-        "closurecompiler": "latest"
-    },
-    "license": "Apache License, Version 2.0",
-    "engines": {
-        "node": ">=0.8"
-    },
-    "scripts": {
-        "prepublish": "npm test",
-        "test": "nodeunit tests/suite.js",
-
-        "make": "npm run-script compile && npm test && npm run-script jsdoc",
-        "compile": "ccjs Preprocessor.js --create_source_map=Preprocessor.min.map --compilation_level=ADVANCED_OPTIMIZATIONS --externs=node > Preprocessor.min.js",
-        "jsdoc": "jsdoc -c jsdoc.json"
-    }
+  "name": "preprocessor",
+  "version": "1.2.0",
+  "author": "Daniel Wirtz <dcode@dcode.io>",
+  "description": "Preprocessor.js: A JavaScript source file preprocessor, e.g. to build different versions of a library.",
+  "main": "Preprocessor.js",
+  "bin": {
+    "preprocess": "./bin/preprocess"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dcodeIO/Preprocessor.js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dcodeIO/Preprocessor.js/issues"
+  },
+  "keywords": [
+    "source",
+    "source code",
+    "JavaScript",
+    "ECMAScript",
+    "preprocessor",
+    "pre-processor",
+    "pre processor",
+    "processor",
+    "utility"
+  ],
+  "dependencies": {
+    "glob": "~3.2.7"
+  },
+  "devDependencies": {
+    "testjs": "latest",
+    "closurecompiler": "latest"
+  },
+  "license": "Apache License, Version 2.0",
+  "engines": {
+    "node": ">=0.8"
+  },
+  "scripts": {
+    "prepublish": "npm test",
+    "test": "nodeunit tests/suite.js",
+    "make": "npm run-script compile && npm test && npm run-script jsdoc",
+    "compile": "ccjs Preprocessor.js --create_source_map=Preprocessor.min.map --compilation_level=ADVANCED_OPTIMIZATIONS --externs=node > Preprocessor.min.js",
+    "jsdoc": "jsdoc -c jsdoc.json"
+  }
 }

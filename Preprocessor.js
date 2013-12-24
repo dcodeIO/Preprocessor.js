@@ -110,6 +110,12 @@
     Preprocessor.DEFINE = /define[ ]+([^\n]+)\r?(?:\n|$)/g;
 
     /**
+     * #define EXPRESSION
+     * @type {RegExp}
+     */
+    Preprocessor.GLOB = /(?:^|[^\\])\*/;
+
+    /**
      * Strips slashes from an escaped string.
      * @param {string} str Escaped string
      * @return {string} Unescaped string
@@ -233,8 +239,23 @@
                         }
                         try {
                             var key = include;
-                            include = require("fs").readFileSync(this.baseDir+"/"+include)+"";
-                            this.includes[key] = include;
+                            if (Preprocessor.GLOB.test(include)) {
+                                var glob = require("glob");
+                                verbose('  globbing '+this.baseDir+"/"+include);
+                                var _this = this;
+                                glob(this.baseDir+"/"+include, {"sync": true}, function (er, files) {
+                                    include = '';
+                                    for (var i=0; i<files.length; i++) {
+                                        verbose('file', files[i])
+                                        var contents = require("fs").readFileSync(files[i])+"";
+                                        _this.includes[key] = contents;
+                                        include += contents;
+                                    }
+                                });
+                            } else {
+                                include = require("fs").readFileSync(this.baseDir+"/"+include)+"";
+                                this.includes[key] = include;
+                            }
                         } catch (e) {
                             throw(new Error("File not found: "+include+" ("+e+")"));
                         }

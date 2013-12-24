@@ -75,6 +75,18 @@ var suite = {
         test.strictEqual(src.trim(), '42');
 
         test.done();
+    },
+
+    "glob": function(test) {
+        var pp = new Preprocessor("// #include_once \"subdir/*.js\"\n", __dirname);
+        var src = pp.process({}, console.log).replace(/\r/, "");
+        test.equal(src.trim(), "'glob1.js';\n'glob2.js';");
+
+        var pp = new Preprocessor("// #include_once \"subdir/**/glob*.js\"\n", __dirname);
+        var src = pp.process({}, console.log).replace(/\r/, "");
+        test.equal(src.trim(), "'glob1.js';\n'glob2.js';\n'glob3.js';");
+
+        test.done();
     }
 };
 
