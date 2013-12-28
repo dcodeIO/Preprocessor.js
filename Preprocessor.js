@@ -75,39 +75,45 @@
 
     /**
      * Definition expression
-     * @type {RegExp}
+     * @type {!RegExp}
      */
     Preprocessor.EXPR = /([ ]*)\/\/[ ]+#(include_once|include|ifn?def|if|endif|else|elif|put|define)/g;
 
     /**
      * #include "path/to/file". Requires node.js' "fs" module.
-     * @type {RegExp}
+     * @type {!RegExp}
      */
     Preprocessor.INCLUDE = /(include_once|include)[ ]+"([^"\\]*(\\.[^"\\]*)*)"[ ]*\r?(?:\n|$)/g;
 
     /**
      * #ifdef/#ifndef SOMEDEFINE, #if EXPRESSION
-     * @type {RegExp}
+     * @type {!RegExp}
      */
     Preprocessor.IF = /(ifdef|ifndef|if)[ ]*([^\r\n]+)\r?\n/g;
 
     /**
      * #endif/#else, #elif EXPRESSION
-     * @type {RegExp}
+     * @type {!RegExp}
      */
     Preprocessor.ENDIF = /(endif|else|elif)([ ]+[^\r\n]+)?\r?(?:\n|$)/g;
 
     /**
      * #put EXPRESSION
-     * @type {RegExp}
+     * @type {!RegExp}
      */
     Preprocessor.PUT = /put[ ]+([^\n]+)[ ]*/g;
 
     /**
      * #define EXPRESSION
-     * @type {RegExp}
+     * @type {!RegExp}
      */
     Preprocessor.DEFINE = /define[ ]+([^\n]+)\r?(?:\n|$)/g;
+
+    /**
+     * @type {!RegExp}
+     * @inner
+     */
+    var GLOB_EXP = /(?:^|[^\\])\*/;
 
     /**
      * Strips slashes from an escaped string.
@@ -232,11 +238,29 @@
                             throw(new Error("Failed to resolve include: "+this.baseDir+"/"+include));
                         }
                         try {
-                            var key = include;
-                            include = require("fs").readFileSync(this.baseDir+"/"+include)+"";
-                            this.includes[key] = include;
+                            var key = include,
+                                fs = require("fs");
+                            if (GLOB_EXP.test(include)) {
+                                var glob = require("glob");
+                                verbose('  glob incl: '+this.baseDir+"/"+include);
+                                var _this = this;
+                                glob(this.baseDir+"/"+include, {"sync": true}, function(err, files) {
+                                    if (err) throw(err);
+                                    include = '';
+                                    for (var i=0; i<files.length; i++) {
+                                        verbose('  incl: '+files[i]);
+                                        var contents = fs.readFileSync(files[i])+"";
+                                        _this.includes[key] = contents;
+                                        include += contents;
+                                    }
+                                });
+                            } else {
+                                verbose('  incl: '+include);
+                                include = fs.readFileSync(this.baseDir+"/"+include)+"";
+                                this.includes[key] = include;
+                            }
                         } catch (e) {
-                            throw(new Error("File not found: "+include+" ("+e+")"));
+                            throw(new Error("Include failed: "+include+" ("+e+")"));
                         }
                     }
                     this.source = this.source.substring(0, match.index)+Preprocessor.indent(include, indent)+this.source.substring(Preprocessor.INCLUDE.lastIndex);
