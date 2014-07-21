@@ -28,9 +28,11 @@
      * @param {string} source Source to process
      * @param {string|Object.<string,string>=} baseDirOrIncludes Source base directory used for includes (node.js only)
      *  or an object containing all the included sources by filename. Defaults to the current working directory.
+     * @param {boolean} preserveLineNumbers When removing blocks of code, replace the block with blank lines so that
+     *  line numbers are preserved, as long as #include is not used
      * @constructor
      */
-    var Preprocessor = function Preprocessor(source, baseDirOrIncludes) {
+    var Preprocessor = function Preprocessor(source, baseDirOrIncludes, preserveLineNumbers) {
 
         /**
          * Source code to pre-process.
@@ -51,6 +53,12 @@
          * @type {Object.<string, string>}
          */
         this.includes = typeof baseDirOrIncludes == 'object' ? baseDirOrIncludes : {};
+
+        /**
+         * Preserve line numbers when removing blocks of code
+         * @type {boolean}
+         */
+        this.preserveLineNumbers = typeof preserveLineNumbers == 'boolean' ? preserveLineNumbers : false;
 
         /**
          * Whether running inside of node.js or not.
@@ -114,6 +122,12 @@
      * @inner
      */
     var GLOB_EXP = /(?:^|[^\\])\*/;
+
+    /**
+     * @type {!RegExp}
+     * @inner
+     */
+    var NOT_LINE_ENDING = /[^\r\n]/g;
 
     /**
      * Strips slashes from an escaped string.
@@ -315,11 +329,23 @@
                     }
                     var before = stack.pop();
                     verbose("  pop: "+JSON.stringify(before));
-                    include = this.source.substring(before["lastIndex"], match.index);
+
+					if (this.preserveLineNumbers) {
+						include = this.source.substring(before["index"], before["lastIndex"]).replace(NOT_LINE_ENDING, "")+
+								this.source.substring(before["lastIndex"], match.index)+
+								this.source.substring(match.index, Preprocessor.ENDIF.lastIndex).replace(NOT_LINE_ENDING, "");
+					} else {
+						include = this.source.substring(before["lastIndex"], match.index);
+					}
+
                     if (before["include"]) {
                         verbose("  incl: "+Preprocessor.nlToStr(include)+", 0-"+before['index']+" + "+include.length+" bytes + "+Preprocessor.ENDIF.lastIndex+"-"+this.source.length);
                         this.source = this.source.substring(0, before["index"])+include+this.source.substring(Preprocessor.ENDIF.lastIndex);
-                    } else {
+                    } else if (this.preserveLineNumbers) {
+                        verbose("  excl(\\n): "+Preprocessor.nlToStr(include)+", 0-"+before['index']+" + "+Preprocessor.ENDIF.lastIndex+"-"+this.source.length);
+						include = include.replace(NOT_LINE_ENDING, "");
+                        this.source = this.source.substring(0, before["index"])+include+this.source.substring(Preprocessor.ENDIF.lastIndex);
+					} else {
                         verbose("  excl: "+Preprocessor.nlToStr(include)+", 0-"+before['index']+" + "+Preprocessor.ENDIF.lastIndex+"-"+this.source.length);
                         include = "";
                         this.source = this.source.substring(0, before["index"])+this.source.substring(Preprocessor.ENDIF.lastIndex);
@@ -352,7 +378,11 @@
                     var define = match2[1];
                     verbose("  def: "+match2[1]);
                     this.defines.push(define);
-                    this.source = this.source.substring(0, match.index)+indent+this.source.substring(Preprocessor.DEFINE.lastIndex);
+					var lineEnding = ""
+					if (this.preserveLineNumbers) {
+						lineEnding = this.source.substring(match.index, Preprocessor.DEFINE.lastIndex).replace(NOT_LINE_ENDING, "");
+					}
+					this.source = this.source.substring(0, match.index)+indent+lineEnding+this.source.substring(Preprocessor.DEFINE.lastIndex);
                     Preprocessor.EXPR.lastIndex = match.index;
                     verbose("  continue at "+Preprocessor.EXPR.lastIndex);
             }
