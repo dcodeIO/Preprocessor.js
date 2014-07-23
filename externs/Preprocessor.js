@@ -34,6 +34,11 @@
 var Preprocessor = function(source, baseDir) {};
 
 /**
+ * @type {boolean}
+ */
+Preprocessor.IS_NODE;
+
+/**
  * @param {string} str
  * @returns {string}
  * @nosideeffects
@@ -70,6 +75,36 @@ Preprocessor.nlToStr = function(str) {};
  * @throws {Error}
  */
 Preprocessor.evaluate = function(runtimeDefines, inlineDefines, expr) {};
+
+/**
+ * @type {string}
+ */
+Preprocessor.prototype.source;
+
+/**
+ * @type {string}
+ */
+Preprocessor.prototype.baseDir;
+
+/**
+ * @type {string}
+ */
+Preprocessor.prototype.dir;
+
+/**
+ * @type {!Object.<string,string>}
+ */
+Preprocessor.prototype.includes;
+
+/**
+ * @type {number}
+ */
+Preprocessor.prototype.errorSourceAhead;
+
+/**
+ * @type {!Array.<string>}
+ */
+Preprocessor.prototype.defines;
 
 /**
  * @param {Object.<string,*>} directives

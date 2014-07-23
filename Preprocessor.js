@@ -47,17 +47,18 @@
         this.baseDir = typeof baseDirOrIncludes == 'string' ? baseDirOrIncludes : ".";
 
         /**
-         * Included sources by filename.
-         * @type {Object.<string, string>}
-         */
-        this.includes = typeof baseDirOrIncludes == 'object' ? baseDirOrIncludes : {};
-
-        /**
-         * Whether running inside of node.js or not.
-         * @type {boolean}
+         * Current base directory.
+         * @type {string}
          * @expose
          */
-        this.isNode = (typeof window == 'undefined' || !window.window) && typeof require == 'function';
+        this.dir = this.baseDir;
+
+        /**
+         * Included sources by filename.
+         * @type {!Object.<string, string>}
+         * @expose
+         */
+        this.includes = typeof baseDirOrIncludes == 'object' ? baseDirOrIncludes : {};
 
         /**
          * Error reporting source ahead length.
@@ -67,11 +68,20 @@
         this.errorSourceAhead = 50;
 
         /**
-         * Runtime defines.
-         * @type {Array.<string>}
+         * Defines.
+         * @type {!Object.<string>}
+         * @expose
          */
-        this.defines = [];
+        this.defines = {};
     };
+
+    /**
+     * Whether running under node.js or not.
+     * @type {boolean}
+     * @const
+     * @expose
+     */
+    Preprocessor.IS_NODE = (typeof window === 'undefined' || !window.window) && typeof require === 'function' && typeof process === 'object' && typeof process.nextTick === 'function';
 
     /**
      * Definition expression
@@ -107,7 +117,7 @@
      * #define EXPRESSION
      * @type {!RegExp}
      */
-    Preprocessor.DEFINE = /define[ ]+([^\n]+)\r?(?:\n|$)/g;
+    Preprocessor.DEFINE = /define[ ]+([^ ]+)[ ]+([^\n]+)\r?(?:\n|$)/g;
 
     /**
      * @type {!RegExp}
@@ -170,38 +180,33 @@
     
     /**
      * Evaluates an expression.
-     * @param {object.<string,string>} runtimeDefines Runtime defines
-     * @param {Array.<string>|string} inlineDefines Inline defines (optional for backward compatibility)
      * @param {string=} expr Expression to evaluate
      * @return {*} Expression result
      * @throws {Error} If the expression cannot be evaluated
      * @expose
      */
-    Preprocessor.evaluate = function(runtimeDefines, inlineDefines, expr) {
-        if (typeof inlineDefines === 'string') {
-            expr = inlineDefines;
-            inlineDefines = [];
-        }
-        var addSlashes = Preprocessor.addSlashes;
-        return (function(runtimeDefines, inlineDefines, expr) {
-            for (var key in runtimeDefines) {
-                if (runtimeDefines.hasOwnProperty(key)) {
-                    eval("var "+key+" = \""+addSlashes(""+runtimeDefines[key])+"\";");
-                }
-            }
-            for (var i=0; i<inlineDefines.length; i++) {
-                var def = inlineDefines[i];
-                if (def.substring(0,9) != 'function ' && def.substring(0,4) != 'var ') {
-                    def = "var "+def; // Enforce local
-                }
-                eval(def);
-            }
-            return eval(expr);
-        }).bind(null)(runtimeDefines, inlineDefines, expr);
+    Preprocessor.evaluate = function(expr) {
+        // Potentially this is dangerous but as we don't want to write a special interpreter, it must be good enough.
+        if (expr.indexOf(";") >= 0)
+            throw(new Error("Illegal expression: "+expr));
+        return eval("(function() { return "+expr+" }()"); // May also throw
     };
 
     /**
-     * Preprocesses.
+     * Processes the specified sources using the given parameters.
+     * @param {string} source Source to process
+     * @param {string|Object.<string,string>=} baseDirOrIncludes Source base directory used for includes (node.js only)
+     *  or an object containing all the included sources by filename. Defaults to the current working directory.
+     * @param {object.<string,string>} defines Defines
+     * @param {function(string)=} verbose Print verbose processing information to the specified function as the first parameter. Defaults to not print debug information.
+     * @returns {string}
+     */
+    Preprocessor.process = function(source, baseDirOrIncludes, defines, verbose) {
+        return new Preprocessor(source, baseDirOrIncludes).process(defines, verbose);
+    };
+
+    /**
+     * Processes this instances sources.
      * @param {object.<string,string>} defines Defines
      * @param {function(string)=} verbose Print verbose processing information to the specified function as the first parameter. Defaults to not print debug information.
      * @return {string} Processed source
@@ -212,6 +217,14 @@
         defines = defines || {};
         verbose = typeof verbose == 'function' ? verbose : function() {};
         verbose("Defines: "+JSON.stringify(defines));
+
+        var defs = {};
+        for (var i in this.defines) // Inline defines
+            if (this.defines.hasOwnProperty(i))
+                defs[i] = this.defines[i];
+        for (i in defines) // Runtime defines
+            if (defines.hasOwnProperty(i))
+                defs[i] = this.defines[i];
         
         var match, match2, include, p, stack = [];
         while ((match = Preprocessor.EXPR.exec(this.source)) !== null) {
@@ -234,7 +247,7 @@
                             include = this.includes[include];
                         }
                     } else { // Load it if in node.js...
-                        if (!this.isNode) {
+                        if (!Preprocessor.IS_NODE) {
                             throw(new Error("Failed to resolve include: "+this.baseDir+"/"+include));
                         }
                         try {
@@ -249,7 +262,7 @@
                                     include = '';
                                     for (var i=0; i<files.length; i++) {
                                         verbose('  incl: '+files[i]);
-                                        var contents = fs.readFileSync(files[i])+"";
+                                        var contents = fs.readFileSync(files[i])+"\n"; // One new line between files
                                         _this.includes[key] = contents;
                                         include += contents;
                                     }
@@ -274,7 +287,7 @@
                     }
                     include = match2[1];
                     verbose("  expr: "+match2[1]);
-                    include = Preprocessor.evaluate(defines, this.defines, match2[1]);
+                    include = Preprocessor.evaluate(defs, match2[1]);
                     verbose("  value: "+Preprocessor.nlToStr(include));
                     this.source = this.source.substring(0, match.index)+indent+include+this.source.substring(Preprocessor.PUT.lastIndex);
                     Preprocessor.EXPR.lastIndex = match.index + include.length;
@@ -289,11 +302,11 @@
                     }
                     verbose("  test: "+match2[2]);
                     if (match2[1] == "ifdef") {
-                        include = !!defines[match2[2]];
+                        include = typeof defs[match2[2]] !== 'undefined';
                     } else if (match2[1] == "ifndef") {
-                        include = !defines[match2[2]];
+                        include = typeof defs[match2[2]] === 'undefined';
                     } else {
-                        include = Preprocessor.evaluate(defines, this.defines, match2[2]);
+                        include = Preprocessor.evaluate(defines, match2[2]);
                     }
                     verbose("  value: "+include);
                     stack.push(p={
@@ -333,7 +346,7 @@
                         if (match2[1] == 'else') {
                             include = !before["include"];
                         } else {
-                            include = Preprocessor.evaluate(defines, this.defines, match2[2]);
+                            include = Preprocessor.evaluate(defs, match2[2]);
                         }
                         stack.push(p={
                             "include": !before["include"],
@@ -349,9 +362,10 @@
                     if ((match2 = Preprocessor.DEFINE.exec(this.source)) === null) {
                         throw(new Error("Illegal #"+match[2]+": "+this.source.substring(match.index, match.index+this.errorSourceAhead)+"..."));
                     }
-                    var define = match2[1];
-                    verbose("  def: "+match2[1]);
-                    this.defines.push(define);
+                    var defineName = match2[1],
+                        defineValue = match2[2];
+                    verbose("  def: "+defineName+" "+defineValue);
+                    defs[defineName] = defineValue;
                     this.source = this.source.substring(0, match.index)+indent+this.source.substring(Preprocessor.DEFINE.lastIndex);
                     Preprocessor.EXPR.lastIndex = match.index;
                     verbose("  continue at "+Preprocessor.EXPR.lastIndex);

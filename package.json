@@ -16,6 +16,7 @@
     },
     "keywords": ["source", "source code", "JavaScript", "ECMAScript", "preprocessor", "pre-processor", "pre processor", "processor", "utility"],
     "dependencies": {
+        "glob": "~3.2"
     },
     "devDependencies": {
         "testjs": "latest",
@@ -32,5 +33,6 @@
         "make": "npm run-script compile && npm test && npm run-script jsdoc",
         "compile": "ccjs Preprocessor.js --create_source_map=Preprocessor.min.map --compilation_level=ADVANCED_OPTIMIZATIONS --externs=node > Preprocessor.min.js",
         "jsdoc": "jsdoc -c jsdoc.json"
-    }
+    },
+    "preferGlobal": true
 }
