@@ -28,9 +28,11 @@
      * @param {string} source Source to process
      * @param {string|Object.<string,string>=} baseDirOrIncludes Source base directory used for includes (node.js only)
      *  or an object containing all the included sources by filename. Defaults to the current working directory.
+     * @param {boolean} preserveLineNumbers When removing blocks of code, replace the block with blank lines so that
+     *  line numbers are preserved, as long as #include is not used
      * @constructor
      */
-    var Preprocessor = function Preprocessor(source, baseDirOrIncludes) {
+    var Preprocessor = function Preprocessor(source, baseDirOrIncludes, preserveLineNumbers) {
 
         /**
          * Source code to pre-process.
@@ -47,18 +49,23 @@
         this.baseDir = typeof baseDirOrIncludes == 'string' ? baseDirOrIncludes : ".";
 
         /**
-         * Current base directory.
-         * @type {string}
-         * @expose
-         */
-        this.dir = this.baseDir;
-
-        /**
          * Included sources by filename.
-         * @type {!Object.<string, string>}
-         * @expose
+         * @type {Object.<string, string>}
          */
         this.includes = typeof baseDirOrIncludes == 'object' ? baseDirOrIncludes : {};
+
+        /**
+         * Preserve line numbers when removing blocks of code
+         * @type {boolean}
+         */
+        this.preserveLineNumbers = typeof preserveLineNumbers == 'boolean' ? preserveLineNumbers : false;
+
+        /**
+         * Whether running inside of node.js or not.
+         * @type {boolean}
+         * @expose
+         */
+        this.isNode = (typeof window == 'undefined' || !window.window) && typeof require == 'function';
 
         /**
          * Error reporting source ahead length.
@@ -68,20 +75,11 @@
         this.errorSourceAhead = 50;
 
         /**
-         * Defines.
-         * @type {!Object.<string>}
-         * @expose
+         * Runtime defines.
+         * @type {Array.<string>}
          */
-        this.defines = {};
+        this.defines = [];
     };
-
-    /**
-     * Whether running under node.js or not.
-     * @type {boolean}
-     * @const
-     * @expose
-     */
-    Preprocessor.IS_NODE = (typeof window === 'undefined' || !window.window) && typeof require === 'function' && typeof process === 'object' && typeof process.nextTick === 'function';
 
     /**
      * Definition expression
@@ -117,13 +115,19 @@
      * #define EXPRESSION
      * @type {!RegExp}
      */
-    Preprocessor.DEFINE = /define[ ]+([^ ]+)[ ]+([^\n]+)\r?(?:\n|$)/g;
+    Preprocessor.DEFINE = /define[ ]+([^\n]+)\r?(?:\n|$)/g;
 
     /**
      * @type {!RegExp}
      * @inner
      */
     var GLOB_EXP = /(?:^|[^\\])\*/;
+
+    /**
+     * @type {!RegExp}
+     * @inner
+     */
+    var NOT_LINE_ENDING = /[^\r\n]/g;
 
     /**
      * Strips slashes from an escaped string.
@@ -177,36 +181,41 @@
     Preprocessor.nlToStr = function(str) {
         return '['+str.replace(/\r/g, "").replace(/\n/g, "\\n")+']';
     };
-    
+
     /**
      * Evaluates an expression.
+     * @param {object.<string,string>} runtimeDefines Runtime defines
+     * @param {Array.<string>|string} inlineDefines Inline defines (optional for backward compatibility)
      * @param {string=} expr Expression to evaluate
      * @return {*} Expression result
      * @throws {Error} If the expression cannot be evaluated
      * @expose
      */
-    Preprocessor.evaluate = function(expr) {
-        // Potentially this is dangerous but as we don't want to write a special interpreter, it must be good enough.
-        if (expr.indexOf(";") >= 0)
-            throw(new Error("Illegal expression: "+expr));
-        return eval("(function() { return "+expr+" }()"); // May also throw
+    Preprocessor.evaluate = function(runtimeDefines, inlineDefines, expr) {
+        if (typeof inlineDefines === 'string') {
+            expr = inlineDefines;
+            inlineDefines = [];
+        }
+        var addSlashes = Preprocessor.addSlashes;
+        return (function(runtimeDefines, inlineDefines, expr) {
+            for (var key in runtimeDefines) {
+                if (runtimeDefines.hasOwnProperty(key)) {
+                    eval("var "+key+" = \""+addSlashes(""+runtimeDefines[key])+"\";");
+                }
+            }
+            for (var i=0; i<inlineDefines.length; i++) {
+                var def = inlineDefines[i];
+                if (def.substring(0,9) != 'function ' && def.substring(0,4) != 'var ') {
+                    def = "var "+def; // Enforce local
+                }
+                eval(def);
+            }
+            return eval(expr);
+        }).bind(null)(runtimeDefines, inlineDefines, expr);
     };
 
     /**
-     * Processes the specified sources using the given parameters.
-     * @param {string} source Source to process
-     * @param {string|Object.<string,string>=} baseDirOrIncludes Source base directory used for includes (node.js only)
-     *  or an object containing all the included sources by filename. Defaults to the current working directory.
-     * @param {object.<string,string>} defines Defines
-     * @param {function(string)=} verbose Print verbose processing information to the specified function as the first parameter. Defaults to not print debug information.
-     * @returns {string}
-     */
-    Preprocessor.process = function(source, baseDirOrIncludes, defines, verbose) {
-        return new Preprocessor(source, baseDirOrIncludes).process(defines, verbose);
-    };
-
-    /**
-     * Processes this instances sources.
+     * Preprocesses.
      * @param {object.<string,string>} defines Defines
      * @param {function(string)=} verbose Print verbose processing information to the specified function as the first parameter. Defaults to not print debug information.
      * @return {string} Processed source
@@ -218,14 +227,6 @@
         verbose = typeof verbose == 'function' ? verbose : function() {};
         verbose("Defines: "+JSON.stringify(defines));
 
-        var defs = {};
-        for (var i in this.defines) // Inline defines
-            if (this.defines.hasOwnProperty(i))
-                defs[i] = this.defines[i];
-        for (i in defines) // Runtime defines
-            if (defines.hasOwnProperty(i))
-                defs[i] = this.defines[i];
-        
         var match, match2, include, p, stack = [];
         while ((match = Preprocessor.EXPR.exec(this.source)) !== null) {
             verbose(match[2]+" @ "+match.index+"-"+Preprocessor.EXPR.lastIndex);
@@ -247,7 +248,7 @@
                             include = this.includes[include];
                         }
                     } else { // Load it if in node.js...
-                        if (!Preprocessor.IS_NODE) {
+                        if (!this.isNode) {
                             throw(new Error("Failed to resolve include: "+this.baseDir+"/"+include));
                         }
                         try {
@@ -262,7 +263,7 @@
                                     include = '';
                                     for (var i=0; i<files.length; i++) {
                                         verbose('  incl: '+files[i]);
-                                        var contents = fs.readFileSync(files[i])+"\n"; // One new line between files
+                                        var contents = fs.readFileSync(files[i])+"";
                                         _this.includes[key] = contents;
                                         include += contents;
                                     }
@@ -287,7 +288,7 @@
                     }
                     include = match2[1];
                     verbose("  expr: "+match2[1]);
-                    include = Preprocessor.evaluate(defs, match2[1]);
+                    include = Preprocessor.evaluate(defines, this.defines, match2[1]);
                     verbose("  value: "+Preprocessor.nlToStr(include));
                     this.source = this.source.substring(0, match.index)+indent+include+this.source.substring(Preprocessor.PUT.lastIndex);
                     Preprocessor.EXPR.lastIndex = match.index + include.length;
@@ -302,11 +303,11 @@
                     }
                     verbose("  test: "+match2[2]);
                     if (match2[1] == "ifdef") {
-                        include = typeof defs[match2[2]] !== 'undefined';
+                        include = !!defines[match2[2]];
                     } else if (match2[1] == "ifndef") {
-                        include = typeof defs[match2[2]] === 'undefined';
+                        include = !defines[match2[2]];
                     } else {
-                        include = Preprocessor.evaluate(defines, match2[2]);
+                        include = Preprocessor.evaluate(defines, this.defines, match2[2]);
                     }
                     verbose("  value: "+include);
                     stack.push(p={
@@ -328,9 +329,21 @@
                     }
                     var before = stack.pop();
                     verbose("  pop: "+JSON.stringify(before));
-                    include = this.source.substring(before["lastIndex"], match.index);
+
+                    if (this.preserveLineNumbers) {
+                        include = this.source.substring(before["index"], before["lastIndex"]).replace(NOT_LINE_ENDING, "")+
+                            this.source.substring(before["lastIndex"], match.index)+
+                            this.source.substring(match.index, Preprocessor.ENDIF.lastIndex).replace(NOT_LINE_ENDING, "");
+                    } else {
+                        include = this.source.substring(before["lastIndex"], match.index);
+                    }
+
                     if (before["include"]) {
                         verbose("  incl: "+Preprocessor.nlToStr(include)+", 0-"+before['index']+" + "+include.length+" bytes + "+Preprocessor.ENDIF.lastIndex+"-"+this.source.length);
+                        this.source = this.source.substring(0, before["index"])+include+this.source.substring(Preprocessor.ENDIF.lastIndex);
+                    } else if (this.preserveLineNumbers) {
+                        verbose("  excl(\\n): "+Preprocessor.nlToStr(include)+", 0-"+before['index']+" + "+Preprocessor.ENDIF.lastIndex+"-"+this.source.length);
+                        include = include.replace(NOT_LINE_ENDING, "");
                         this.source = this.source.substring(0, before["index"])+include+this.source.substring(Preprocessor.ENDIF.lastIndex);
                     } else {
                         verbose("  excl: "+Preprocessor.nlToStr(include)+", 0-"+before['index']+" + "+Preprocessor.ENDIF.lastIndex+"-"+this.source.length);
@@ -346,7 +359,7 @@
                         if (match2[1] == 'else') {
                             include = !before["include"];
                         } else {
-                            include = Preprocessor.evaluate(defs, match2[2]);
+                            include = Preprocessor.evaluate(defines, this.defines, match2[2]);
                         }
                         stack.push(p={
                             "include": !before["include"],
@@ -362,11 +375,14 @@
                     if ((match2 = Preprocessor.DEFINE.exec(this.source)) === null) {
                         throw(new Error("Illegal #"+match[2]+": "+this.source.substring(match.index, match.index+this.errorSourceAhead)+"..."));
                     }
-                    var defineName = match2[1],
-                        defineValue = match2[2];
-                    verbose("  def: "+defineName+" "+defineValue);
-                    defs[defineName] = defineValue;
-                    this.source = this.source.substring(0, match.index)+indent+this.source.substring(Preprocessor.DEFINE.lastIndex);
+                    var define = match2[1];
+                    verbose("  def: "+match2[1]);
+                    this.defines.push(define);
+                    var lineEnding = ""
+                    if (this.preserveLineNumbers) {
+                        lineEnding = this.source.substring(match.index, Preprocessor.DEFINE.lastIndex).replace(NOT_LINE_ENDING, "");
+                    }
+                    this.source = this.source.substring(0, match.index)+indent+lineEnding+this.source.substring(Preprocessor.DEFINE.lastIndex);
                     Preprocessor.EXPR.lastIndex = match.index;
                     verbose("  continue at "+Preprocessor.EXPR.lastIndex);
             }
@@ -398,5 +414,5 @@
         }
         global["dcodeIO"]["Preprocessor"] = Preprocessor;
     }
-    
+
 })(this);

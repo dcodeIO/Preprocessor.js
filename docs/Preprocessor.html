@@ -41,7 +41,7 @@
     
         
 <dt>
-    <h4 class="name" id="Preprocessor"><span class="type-signature"></span>new Preprocessor<span class="signature">(source, <span class="optional">baseDirOrIncludes</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="Preprocessor"><span class="type-signature"></span>new Preprocessor<span class="signature">(source, <span class="optional">baseDirOrIncludes</span>, preserveLineNumbers)</span><span class="type-signature"></span></h4>
     
     
 </dt>
@@ -142,6 +142,35 @@
             
             
             <td class="description last">Source base directory used for includes (node.js only) or an object containing all the included sources by filename. Defaults to the current working directory.</td>
+        </tr>
+	
+	
+	
+        <tr>
+            
+                <td class="name"><code>preserveLineNumbers</code></td>
+            
+            
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+            
+            
+                <td class="attributes">
+                
+                    
+                
+                </td>
+            
+            
+            
+            
+            <td class="description last">When removing blocks of code, replace the block with blank lines so that line numbers are preserved, as long as #include is not used</td>
         </tr>
 	
 	
@@ -663,6 +692,51 @@
     
     <div class="description">
         Whether running inside of node.js or not.
+    </div>
+    
+    
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+    
+    
+</dd>
+
+        
+            
+<dt>
+    <h4 class="name" id="preserveLineNumbers"><span class="type-signature"></span>preserveLineNumbers<span class="type-signature"> :boolean</span></h4>
+    
+    
+</dt>
+<dd>
+    
+    <div class="description">
+        Preserve line numbers when removing blocks of code
     </div>
     
     
