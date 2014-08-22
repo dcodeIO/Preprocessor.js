@@ -4,6 +4,10 @@ Provides a JavaScript source file preprocessor, e.g. to build different versions
 build [ProtoBuf.js](https://github.com/dcodeIO/ProtoBuf.js) (its [build](https://github.com/dcodeIO/ProtoBuf.js/blob/master/build.js)
 and [main script](https://github.com/dcodeIO/ProtoBuf.js/blob/master/src/ProtoBuf.js) are quite good examples).
 
+**Deprecation notice:** Preprocessor.js has been deprecated in favor of [MetaScript](https://github.com/dcodeIO/MetaScript),
+a much more JavaScripty way for build time meta programming using JavaScript itself as the meta language. Check out the
+[migration guide](https://github.com/dcodeIO/MetaScript/wiki/Migration) to get a quick impression of its merits.
+
 Directives
 ----------
 * Includes (always relative to the `baseDirectory`, defaults to "."):
