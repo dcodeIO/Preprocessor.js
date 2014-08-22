@@ -153,7 +153,7 @@ Downloads
 
 Documentation
 -------------
-* [View documentation](http://htmlpreview.github.com/?http://github.com/dcodeIO/Preprocessor.js/master/docs/Preprocessor.html)
+* [View documentation](http://htmlpreview.github.io/?https://github.com/dcodeIO/Preprocessor.js/blob/master/docs/Preprocessor.html)
 
 Tests (& Examples) [![Build Status](https://travis-ci.org/dcodeIO/Preprocessor.js.png?branch=master)](https://travis-ci.org/dcodeIO/Preprocessor.js)
 ------------------
